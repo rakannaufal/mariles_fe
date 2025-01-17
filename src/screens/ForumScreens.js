@@ -8,10 +8,11 @@ import {
   StyleSheet,
 } from "react-native";
 import Icon from "react-native-vector-icons/FontAwesome";
-import { FontAwesome } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import axios from "axios"; // Import axios untuk memanggil API
+import { FontAwesome } from "@expo/vector-icons";
 import { Platform } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 // Sesuaikan BASE_URL dengan kondisi emulator/perangkat
 const BASE_URL =
@@ -22,39 +23,52 @@ const ForumScreens = () => {
   const [searchQuery, setSearchQuery] = useState(""); // State untuk query pencarian
   const [loading, setLoading] = useState(true); // State untuk memonitor loading data
   const navigation = useNavigation();
+  const [currentUser, setCurrentUser] = useState(null);
 
   // Fungsi untuk mengambil data forum dari API
   const fetchForumData = async () => {
     try {
       const response = await axios.get(`${BASE_URL}/api/forum`);
-
       if (response.data && response.data.forum) {
-        // Memastikan data forum ada
         const formattedData = Object.keys(response.data.forum).map((key) => ({
           forum_id: key,
           ...response.data.forum[key],
         }));
-
-        // Urutkan data berdasarkan waktu (misalnya, data terbaru dulu)
-        formattedData.reverse(); // Membalik urutan array untuk menampilkan data terbaru di atas
-        setForumData(formattedData); // Menyimpan data yang sudah diformat
+        formattedData.reverse(); // Menampilkan data terbaru di atas
+        setForumData(formattedData);
       } else {
         console.log("Tidak ada data forum");
       }
     } catch (error) {
       console.error("Error fetching forum data:", error);
     } finally {
-      setLoading(false); // Mengubah state loading menjadi false setelah data selesai di-fetch
+      setLoading(false); // Set loading ke false setelah selesai
+    }
+  };
+
+  // Fungsi untuk mengambil data user yang sedang login
+  const fetchCurrentUser = async () => {
+    try {
+      const storedData = await AsyncStorage.getItem("userData");
+      if (storedData) {
+        const parsedData = JSON.parse(storedData);
+        setCurrentUser(parsedData.username); // Menggunakan username untuk pengecekan
+      }
+    } catch (error) {
+      console.error("Failed to load user data:", error);
     }
   };
 
   useEffect(() => {
+    fetchCurrentUser();
     fetchForumData(); // Ambil data forum saat pertama kali komponen dimuat
   }, []);
 
   const handleHome = () => navigation.navigate("Home");
   const handleSave = () => navigation.navigate("Savelist");
-  const handleJawaban = () => navigation.navigate("ForumAnswer");
+  const handleJawaban = (forumId, question, username, tag) => {
+    navigation.navigate("ForumAnswer", { forumId, question, username, tag });
+  };
   const handleQuestion = () => navigation.navigate("ForumQuestion");
 
   // Filter data forum berdasarkan pencarian
@@ -64,9 +78,44 @@ const ForumScreens = () => {
       data.pertanyaan.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  console.log("Filtered Data:", filteredData); // Cek filtered data
+  // Fungsi untuk menghapus pertanyaan forum
+  const handleDelete = async (forumId) => {
+    try {
+      if (!currentUser) {
+        console.error("User is not logged in.");
+        return;
+      }
 
-  // Cek jika loading true maka tampilkan indikator loading
+      console.log("Attempting to delete forum ID:", forumId);
+      console.log("Current user:", currentUser); // Debug log to check the username
+
+      // Ensure you're passing the correct user_id (likely 'uid' from Firebase)
+      const response = await axios.delete(
+        `${BASE_URL}/api/forum/deleteForum/${forumId}`,
+        {
+          headers: { "Content-Type": "application/json" },
+          data: { user_id: currentUser.uid }, // Pass actual user_id (uid)
+        }
+      );
+
+      if (response.data.success) {
+        console.log("Forum deleted successfully:", forumId);
+        setForumData(forumData.filter((data) => data.forum_id !== forumId)); // Remove the deleted forum from the local state
+      } else {
+        console.error(
+          "Failed to delete forum question:",
+          response.data.message
+        );
+      }
+    } catch (error) {
+      console.error(
+        "Error deleting forum question:",
+        error.response?.data || error.message
+      );
+    }
+  };
+
+  // Tampilkan indikator loading jika masih memuat data
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
@@ -75,7 +124,7 @@ const ForumScreens = () => {
     );
   }
 
-  // Cek jika filteredData kosong
+  // Tampilkan pesan jika tidak ada data yang cocok dengan pencarian
   if (filteredData.length === 0) {
     return (
       <View style={styles.container}>
@@ -113,11 +162,27 @@ const ForumScreens = () => {
                 <View style={styles.profileAvatar} />
                 <Text style={styles.profileName}>{data.username}</Text>
               </View>
+              {/* Tampilkan tombol hapus hanya jika username cocok */}
+              {data.username === currentUser && (
+                <TouchableOpacity
+                  onPress={() => handleDelete(data.forum_id)}
+                  style={styles.deleteButton}
+                >
+                  <FontAwesome name="trash" size={20} color="red" />
+                </TouchableOpacity>
+              )}
             </View>
             <Text style={styles.questionText}>{data.pertanyaan}</Text>
             <View style={styles.tagContainer}>
               <TouchableOpacity
-                onPress={handleJawaban}
+                onPress={() =>
+                  handleJawaban(
+                    data.forum_id,
+                    data.pertanyaan,
+                    data.username,
+                    data.tag
+                  )
+                }
                 style={styles.commentButton}
               >
                 <Text style={styles.commentButtonText}>Beri jawaban</Text>
@@ -274,6 +339,9 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     bottom: 0,
     marginTop: 40,
+  },
+  deleteButton: {
+    padding: 8,
   },
   loadingContainer: {
     flex: 1,

@@ -1,5 +1,3 @@
-// Frontend marilesFE: src/account/signInPelajar.js
-
 import React, { useState } from "react";
 import {
   View,
@@ -8,6 +6,7 @@ import {
   TouchableOpacity,
   StyleSheet,
   Alert,
+  ActivityIndicator,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -19,6 +18,8 @@ const BASE_URL =
 export default function SignInPelajar() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+
   const navigation = useNavigation();
 
   const validateInput = () => {
@@ -40,6 +41,7 @@ export default function SignInPelajar() {
 
   const handleLogin = async () => {
     if (!validateInput()) return;
+    setIsLoading(true);
 
     try {
       const response = await fetch(`${BASE_URL}/api/auth/login`, {
@@ -51,27 +53,31 @@ export default function SignInPelajar() {
       });
 
       const data = await response.json();
+      setIsLoading(true);
 
       if (response.ok && data.success) {
-        if (data.token) {
-          // Cek apakah token ada di respons
+        if (data.token && data.userData) {
           // Simpan token dan data pengguna di AsyncStorage
           await AsyncStorage.setItem("token", data.token);
           await AsyncStorage.setItem("userData", JSON.stringify(data.userData));
 
-          Alert.alert(
-            "Sukses",
-            `Login berhasil! Selamat datang, ${data.userData.username}.`
-          );
-          navigation.navigate("Home");
+          console.log("Login berhasil, token:", data.token);
+          console.log("Data pengguna:", data.userData);
+
+          navigation.navigate("Home"); // Navigasi ke halaman utama pelajar
         } else {
-          Alert.alert("Error", "Token tidak diterima dari server.");
+          Alert.alert(
+            "Error",
+            "Token atau data pengguna tidak diterima dari server."
+          );
+          console.error("Respons tidak lengkap:", data);
         }
       } else {
         Alert.alert("Error", data.message || "Login gagal.");
+        console.error("Kesalahan server:", data);
       }
     } catch (error) {
-      console.error("Network Error:", error);
+      console.error("Kesalahan jaringan:", error);
       Alert.alert("Error", "Tidak dapat terhubung ke server.");
     }
   };
@@ -95,6 +101,7 @@ export default function SignInPelajar() {
         value={email}
         onChangeText={setEmail}
         keyboardType="email-address"
+        autoCapitalize="none"
       />
 
       <TextInput
@@ -106,8 +113,16 @@ export default function SignInPelajar() {
         secureTextEntry
       />
 
-      <TouchableOpacity style={styles.buttonPrimary} onPress={handleLogin}>
-        <Text style={styles.buttonPrimaryText}>Masuk</Text>
+      <TouchableOpacity
+        style={styles.buttonPrimary}
+        onPress={handleLogin}
+        disabled={isLoading}
+      >
+        {isLoading ? (
+          <ActivityIndicator size="small" color="#fff" />
+        ) : (
+          <Text style={styles.buttonPrimaryText}>Masuk</Text>
+        )}
       </TouchableOpacity>
 
       <Text style={styles.labelText}>Masuk sebagai pengajar</Text>

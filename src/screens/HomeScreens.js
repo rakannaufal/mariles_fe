@@ -13,6 +13,8 @@ import {
   TouchableHighlight,
 } from "react-native";
 import { FontAwesome } from "@expo/vector-icons";
+import Icon from "react-native-vector-icons/Feather";
+import Entypo from "react-native-vector-icons/Entypo";
 import { useNavigation } from "@react-navigation/native";
 import styles from "../../styles/homeStyles";
 import Header from "../components/Header";
@@ -249,10 +251,10 @@ const HomeScreens = () => {
       {/* Footer */}
       <View style={styles.footer}>
         <TouchableOpacity>
-          <FontAwesome name="home" size={24} style={{ color: "white" }} />
+          <Icon name="home" size={24} style={{ color: "white" }} />
         </TouchableOpacity>
         <TouchableOpacity onPress={handleForum}>
-          <FontAwesome name="comments" size={24} />
+          <Entypo name="chat" size={24} />
         </TouchableOpacity>
         <TouchableOpacity onPress={handleSavelist}>
           <FontAwesome name="bookmark" size={24} />

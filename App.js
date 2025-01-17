@@ -19,11 +19,18 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import ForumScreens from "./src/screens/ForumScreens";
 import ForumAnswer from "./src/screens/ForumAnswer";
 import ForumQuestion from "./src/screens/ForumQuestion";
+import SettingScreens from "./src/screens/SettingScreens";
+import ContactScreens from "./src/screens/ContactScreens";
+
+//pengajar
+import HomeScreensPengajar from "./src/pengajar/HomePengajar";
+import AccountPengajar from "./src/pengajar/AccountPengajar";
+
 import { Alert } from "react-native";
 
 const Stack = createStackNavigator();
 
-const TOKEN_EXPIRATION_DAYS = 2;
+const TOKEN_EXPIRATION_DAYS = 1;
 
 export default function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -61,7 +68,7 @@ export default function App() {
     checkLoginStatus();
   }, []);
 
-  const handleLogin = async (token) => {
+  const handleLoginPengajar = async (token) => {
     try {
       const expiry = new Date();
       expiry.setDate(expiry.getDate() + TOKEN_EXPIRATION_DAYS);
@@ -134,6 +141,16 @@ export default function App() {
           options={{ headerShown: false }}
         />
         <Stack.Screen
+          name="Setting"
+          component={SettingScreens}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="Contact"
+          component={ContactScreens}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
           name="Account"
           component={AccountScreens}
           options={{ headerShown: false }}
@@ -163,10 +180,21 @@ export default function App() {
           name="SignInPengajar"
           component={SignInPengajar}
           options={{ headerShown: false }}
+          handleLoginPengajar={handleLoginPengajar}
         />
         <Stack.Screen
           name="SignUpPengajar"
           component={SignUpPengajar}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="HomePengajar"
+          component={HomeScreensPengajar}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="AccountPengajar"
+          component={AccountPengajar}
           options={{ headerShown: false }}
         />
       </Stack.Navigator>

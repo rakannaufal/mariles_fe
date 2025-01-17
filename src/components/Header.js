@@ -13,7 +13,7 @@ import { useNavigation } from "@react-navigation/native";
 export default function Header() {
   const navigation = useNavigation();
   const handleAccount = () => {
-    navigation.navigate("Account");
+    navigation.navigate("Setting");
   };
   return (
     <View style={styles.header}>
@@ -23,7 +23,7 @@ export default function Header() {
         placeholderTextColor="gray"
       />
       <TouchableOpacity onPress={handleAccount}>
-        <FontAwesome name="user-circle" size={24} style={styles.userIcon} />
+        <FontAwesome name="cog" size={24} style={styles.userIcon} />
       </TouchableOpacity>
     </View>
   );

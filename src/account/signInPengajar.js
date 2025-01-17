@@ -1,3 +1,4 @@
+// LoginScreenPengajar.js
 import React, { useState } from "react";
 import {
   View,
@@ -6,8 +7,10 @@ import {
   TouchableOpacity,
   StyleSheet,
   Alert,
+  ActivityIndicator,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Platform } from "react-native";
 
 const BASE_URL =
@@ -16,13 +19,21 @@ const BASE_URL =
 export default function LoginScreenPengajar() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
   const navigation = useNavigation();
 
-  const handleLogin = async () => {
+  const validateEmail = (email) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  const handleLoginPengajar = async () => {
     if (!email || !password) {
       Alert.alert("Error", "Email dan password tidak boleh kosong.");
       return;
     }
+
+    setIsLoading(true);
 
     try {
       const response = await fetch(`${BASE_URL}/api/auth/loginPengajar`, {
@@ -34,28 +45,27 @@ export default function LoginScreenPengajar() {
       });
 
       const data = await response.json();
+      setIsLoading(false);
 
       if (response.ok && data.success) {
-        Alert.alert(
-          "Sukses",
-          `Login berhasil! Selamat datang, ${data.username}.`
-        );
-        navigation.navigate("Home"); // Pastikan halaman "Home" ada di navigasi Anda
+        if (data.userData) {
+          await AsyncStorage.setItem("userData", JSON.stringify(data.userData));
+          console.log("Data pengguna berhasil disimpan:", data.userData);
+          navigation.navigate("HomePengajar");
+        } else {
+          Alert.alert(
+            "Error",
+            "Data pengguna tidak ditemukan di respons server."
+          );
+        }
       } else {
         Alert.alert("Error", data.message || "Login gagal.");
       }
     } catch (error) {
+      setIsLoading(false);
       console.error("Network Error:", error);
       Alert.alert("Error", "Tidak dapat terhubung ke server.");
     }
-  };
-
-  const handleStudentLogin = () => {
-    navigation.navigate("SignInPelajar"); // Pastikan halaman "SignInPelajar" ada di navigasi Anda
-  };
-
-  const handleRegister = () => {
-    navigation.navigate("SignUpPengajar"); // Pastikan halaman "SignUpPengajar" ada di navigasi Anda
   };
 
   return (
@@ -69,6 +79,7 @@ export default function LoginScreenPengajar() {
         value={email}
         onChangeText={setEmail}
         keyboardType="email-address"
+        autoCapitalize="none"
       />
 
       <TextInput
@@ -80,21 +91,16 @@ export default function LoginScreenPengajar() {
         secureTextEntry
       />
 
-      <TouchableOpacity style={styles.buttonPrimary} onPress={handleLogin}>
-        <Text style={styles.buttonPrimaryText}>Masuk</Text>
-      </TouchableOpacity>
-
-      <Text style={styles.subText}>Masuk Sebagai Pelajar</Text>
       <TouchableOpacity
-        style={styles.buttonSecondary}
-        onPress={handleStudentLogin}
+        style={styles.buttonPrimary}
+        onPress={handleLoginPengajar}
+        disabled={isLoading}
       >
-        <Text style={styles.buttonSecondaryText}>Masuk</Text>
-      </TouchableOpacity>
-
-      <Text style={styles.subText}>Belum Punya Akun?</Text>
-      <TouchableOpacity style={styles.buttonSecondary} onPress={handleRegister}>
-        <Text style={styles.buttonSecondaryText}>Daftar</Text>
+        {isLoading ? (
+          <ActivityIndicator size="small" color="#fff" />
+        ) : (
+          <Text style={styles.buttonPrimaryText}>Masuk</Text>
+        )}
       </TouchableOpacity>
     </View>
   );
@@ -137,26 +143,6 @@ const styles = StyleSheet.create({
   },
   buttonPrimaryText: {
     color: "#FFFFFF",
-    fontSize: 16,
-    fontWeight: "600",
-  },
-  subText: {
-    color: "#000",
-    fontSize: 14,
-    marginBottom: 10,
-  },
-  buttonSecondary: {
-    width: "100%",
-    backgroundColor: "#FFFFFF",
-    height: 50,
-    borderRadius: 25,
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 20,
-    elevation: 3,
-  },
-  buttonSecondaryText: {
-    color: "#000",
     fontSize: 16,
     fontWeight: "600",
   },
