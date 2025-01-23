@@ -11,10 +11,7 @@ import {
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { Platform } from "react-native";
-
-const BASE_URL =
-  Platform.OS === "android" ? "http://10.0.2.2:5001" : "http://localhost:5001";
+import BASE_URL from "../config/config";
 
 export default function LoginScreenPengajar() {
   const [email, setEmail] = useState("");
@@ -68,6 +65,14 @@ export default function LoginScreenPengajar() {
     }
   };
 
+  const handleTeacherLogin = () => {
+    navigation.navigate("SignInPelajar");
+  };
+
+  const handleRegister = () => {
+    navigation.navigate("SignUpPengajar");
+  };
+
   return (
     <View style={styles.container}>
       <Text style={styles.header}>Masuk Sebagai Pengajar</Text>
@@ -101,6 +106,18 @@ export default function LoginScreenPengajar() {
         ) : (
           <Text style={styles.buttonPrimaryText}>Masuk</Text>
         )}
+      </TouchableOpacity>
+      <Text style={styles.labelText}>Masuk sebagai pelajar</Text>
+      <TouchableOpacity
+        style={styles.buttonSecondary}
+        onPress={handleTeacherLogin}
+      >
+        <Text style={styles.buttonSecondaryText}>Masuk</Text>
+      </TouchableOpacity>
+
+      <Text style={styles.registerText}>Belum punya akun?</Text>
+      <TouchableOpacity style={styles.buttonSecondary} onPress={handleRegister}>
+        <Text style={styles.buttonSecondaryText}>Daftar</Text>
       </TouchableOpacity>
     </View>
   );
@@ -145,5 +162,30 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
     fontSize: 16,
     fontWeight: "600",
+  },
+  labelText: {
+    color: "#000",
+    fontSize: 14,
+    marginBottom: 10,
+  },
+  buttonSecondary: {
+    width: "100%",
+    backgroundColor: "#FFFFFF",
+    height: 50,
+    borderRadius: 25,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 20,
+    elevation: 3,
+  },
+  buttonSecondaryText: {
+    color: "#000",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  registerText: {
+    fontSize: 14,
+    color: "#000",
+    marginBottom: 10,
   },
 });

@@ -17,10 +17,7 @@ import { useNavigation } from "@react-navigation/native";
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-import { Platform } from "react-native";
-
-const BASE_URL =
-  Platform.OS === "android" ? "http://10.0.2.2:5001" : "http://localhost:5001";
+import BASE_URL from "../config/config";
 
 export default function ForumQuestion() {
   const navigation = useNavigation();

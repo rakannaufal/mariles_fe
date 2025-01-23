@@ -12,11 +12,8 @@ import {
 import Icon from "react-native-vector-icons/FontAwesome";
 import { useRoute, useNavigation } from "@react-navigation/native";
 import axios from "axios";
+import BASE_URL from "../config/config";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-
-// Base URL for API
-const BASE_URL =
-  Platform.OS === "android" ? "http://10.0.2.2:5001" : "http://localhost:5001";
 
 const ForumAnswer = () => {
   const route = useRoute();
@@ -162,7 +159,7 @@ const ForumAnswer = () => {
             multiline
             value={answerText}
             onChangeText={(text) => setAnswerText(text)}
-            placeholder="Enter your answer..."
+            placeholder="Masukkan jawabanmu disini..."
           />
 
           <TouchableOpacity

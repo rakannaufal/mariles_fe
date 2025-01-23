@@ -19,6 +19,8 @@ const CardDetails = () => {
   const navigation = useNavigation();
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedImage, setSelectedImage] = useState(null);
+  const [rating, setRating] = useState(0); // Untuk menyimpan rating pengguna
+  const [isSaved, setIsSaved] = useState(false); // Untuk menyimpan status save
 
   const handleImagePress = (uri) => {
     setSelectedImage(uri);
@@ -29,6 +31,15 @@ const CardDetails = () => {
     setModalVisible(false);
     setSelectedImage(null);
   };
+
+  const handleStarPress = (index) => {
+    setRating(index + 1); // Set rating berdasarkan bintang yang diklik
+  };
+
+  const toggleSave = () => {
+    setIsSaved(!isSaved); // Toggle status save
+  };
+
   return (
     <ScrollView style={styles.container}>
       {/* Header */}
@@ -89,7 +100,17 @@ const CardDetails = () => {
 
       {/* Info Section */}
       <View style={styles1.infoContainer}>
-        <Text style={styles1.title}>Ganesha Operation</Text>
+        <View style={styles1.titleRow}>
+          <Text style={styles1.title}>Les Privat Cendekia</Text>
+          <TouchableOpacity onPress={toggleSave} style={styles1.saveButton}>
+            <FontAwesome
+              name="bookmark"
+              style={styles1.iconbook}
+              size={24}
+              color={isSaved ? "blue" : "gray"}
+            />
+          </TouchableOpacity>
+        </View>
         <Text style={styles1.openTime}>Buka 07.00 - 21.00</Text>
 
         <View style={styles1.locationContainer}>
@@ -158,13 +179,17 @@ const CardDetails = () => {
         <Text style={styles1.sectionTitle}>Beri Penilaian</Text>
         <View style={styles1.ratingStars}>
           {[...Array(5)].map((_, index) => (
-            <FontAwesome
+            <TouchableOpacity
               key={index}
-              name="star-o"
-              size={50}
-              style={{ marginHorizontal: 10 }}
-              color="gray"
-            />
+              onPress={() => handleStarPress(index)}
+            >
+              <FontAwesome
+                name={index < rating ? "star" : "star-o"}
+                size={50}
+                style={{ marginHorizontal: 10 }}
+                color={index < rating ? "gold" : "gray"}
+              />
+            </TouchableOpacity>
           ))}
         </View>
       </View>

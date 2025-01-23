@@ -10,10 +10,7 @@ import {
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { Platform } from "react-native";
-
-const BASE_URL =
-  Platform.OS === "android" ? "http://10.0.2.2:5001" : "http://localhost:5001";
+import BASE_URL from "../config/config";
 
 export default function SignInPelajar() {
   const [email, setEmail] = useState("");
@@ -40,6 +37,15 @@ export default function SignInPelajar() {
   };
 
   const handleLogin = async () => {
+    const defaultEmail = "operator@gmail.com";
+    const defaultPassword = "operator123";
+
+    if (email === defaultEmail && password === defaultPassword) {
+      // Navigasi ke halaman operator
+      navigation.navigate("Dashboard");
+      return;
+    }
+
     if (!validateInput()) return;
     setIsLoading(true);
 
@@ -53,7 +59,7 @@ export default function SignInPelajar() {
       });
 
       const data = await response.json();
-      setIsLoading(true);
+      setIsLoading(false);
 
       if (response.ok && data.success) {
         if (data.token && data.userData) {

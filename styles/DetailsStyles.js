@@ -32,6 +32,8 @@ const DetailsStyles = StyleSheet.create({
   },
   infoContainer: { padding: 10 },
   title: { fontSize: 24, fontWeight: "bold" },
+  titleRow: { flexDirection: "row", justifyContent: "space-between" },
+  iconbook: { marginVertical: 6 },
   openTime: { fontSize: 16, color: "gray" },
   locationContainer: {
     flexDirection: "row",

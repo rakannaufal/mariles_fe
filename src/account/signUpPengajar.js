@@ -8,10 +8,7 @@ import {
   Alert,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
-import { Platform } from "react-native";
-
-const BASE_URL =
-  Platform.OS === "android" ? "http://10.0.2.2:5001" : "http://localhost:5001";
+import BASE_URL from "../config/config";
 
 export default function RegisterScreenPengajar() {
   const [username, setUsername] = useState("");
@@ -42,17 +39,13 @@ export default function RegisterScreenPengajar() {
 
     try {
       // Mengirimkan data ke backend API untuk registrasi
-      const response = await fetch(
-        // `https://d9a3-2001-448a-1090-4efc-f4b0-df39-12a5-747.ngrok-free.app/api/auth/registerPengajar`,
-        `${BASE_URL}/api/auth/registerPengajar`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ username, email, password, phone, address }),
-        }
-      );
+      const response = await fetch(`${BASE_URL}/api/auth/registerPengajar`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ username, email, password, phone, address }),
+      });
 
       const data = await response.json(); // Pastikan ini ada untuk mengubah response menjadi JSON
       console.log(data); // Debug log

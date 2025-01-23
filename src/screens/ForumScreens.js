@@ -11,12 +11,9 @@ import Icon from "react-native-vector-icons/FontAwesome";
 import { useNavigation } from "@react-navigation/native";
 import axios from "axios"; // Import axios untuk memanggil API
 import { FontAwesome } from "@expo/vector-icons";
-import { Platform } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-// Sesuaikan BASE_URL dengan kondisi emulator/perangkat
-const BASE_URL =
-  Platform.OS === "android" ? "http://10.0.2.2:5001" : "http://localhost:5001";
+import BASE_URL from "../config/config";
 
 const ForumScreens = () => {
   const [forumData, setForumData] = useState([]); // State untuk data forum
@@ -58,10 +55,18 @@ const ForumScreens = () => {
       console.error("Failed to load user data:", error);
     }
   };
-
   useEffect(() => {
     fetchCurrentUser();
-    fetchForumData(); // Ambil data forum saat pertama kali komponen dimuat
+    fetchForumData();
+
+    // Interval untuk refresh data setiap 60 detik
+    const interval = setInterval(() => {
+      console.log("Refreshing forum data...");
+      fetchForumData();
+    }, 5000);
+
+    // Membersihkan interval saat komponen di-unmount
+    return () => clearInterval(interval);
   }, []);
 
   const handleHome = () => navigation.navigate("Home");
@@ -120,15 +125,6 @@ const ForumScreens = () => {
     return (
       <View style={styles.loadingContainer}>
         <Text>Loading...</Text>
-      </View>
-    );
-  }
-
-  // Tampilkan pesan jika tidak ada data yang cocok dengan pencarian
-  if (filteredData.length === 0) {
-    return (
-      <View style={styles.container}>
-        <Text style={styles.noDataText}>Tidak ada data yang ditemukan.</Text>
       </View>
     );
   }
@@ -194,7 +190,7 @@ const ForumScreens = () => {
                   </Text>
                 ))
               ) : (
-                <Text style={styles.tagText}>No tags available</Text>
+                <Text style={styles.tagText}>Tidak ada tag tersedia</Text>
               )}
             </View>
           </View>

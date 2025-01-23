@@ -7,6 +7,8 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 const SettingScreens = () => {
   const handleAccount = () => navigation.navigate("Account");
   const handleContact = () => navigation.navigate("Contact");
+  const handleAbout = () => navigation.navigate("About");
+  const handleTerms = () => navigation.navigate("Terms");
 
   const [userData, setUserData] = useState(null); // State untuk menyimpan data pengguna
 
@@ -61,6 +63,12 @@ const SettingScreens = () => {
         </TouchableOpacity>
         <TouchableOpacity style={styles.button} onPress={handleContact}>
           <Text style={styles.buttonText}>Hubungi Kami</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.button} onPress={handleAbout}>
+          <Text style={styles.buttonText}>Tentang Kami</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.button} onPress={handleTerms}>
+          <Text style={styles.buttonText}>Syarat dan Ketentuan</Text>
         </TouchableOpacity>
         <View style={styles.button}>
           <Text style={styles.buttonText}>Versi App 1.0</Text>

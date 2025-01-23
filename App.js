@@ -15,18 +15,29 @@ import SignInPelajar from "./src/account/signInPelajar";
 import SignUpPelajar from "./src/account/signUpPelajar";
 import SignInPengajar from "./src/account/signInPengajar";
 import SignUpPengajar from "./src/account/signUpPengajar";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import ForumScreens from "./src/screens/ForumScreens";
 import ForumAnswer from "./src/screens/ForumAnswer";
 import ForumQuestion from "./src/screens/ForumQuestion";
 import SettingScreens from "./src/screens/SettingScreens";
 import ContactScreens from "./src/screens/ContactScreens";
+import AboutScreens from "./src/screens/AboutScreens";
+import TermsScreens from "./src/screens/TermsScreens";
 
 //pengajar
 import HomeScreensPengajar from "./src/pengajar/HomePengajar";
 import AccountPengajar from "./src/pengajar/AccountPengajar";
+import InfoLes from "./src/pengajar/InfoLes";
+
+//operator
+import DataPelajar from "./src/operator/DataPelajar";
+import DataPengajar from "./src/operator/DataPengajar";
+import DataForum from "./src/operator/DataForum";
+import DataContact from "./src/operator/DataContact";
+import BannerScreen from "./src/operator/BannerScreen";
 
 import { Alert } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import Dashboard from "./src/operator/DashboardOperator";
 
 const Stack = createStackNavigator();
 
@@ -110,11 +121,9 @@ export default function App() {
           component={OnboardingScreen}
           options={{ headerShown: false }}
         />
-        <Stack.Screen
-          name="Home"
-          component={HomeScreens}
-          options={{ headerShown: false }}
-        />
+        <Stack.Screen name="Home" options={{ headerShown: false }}>
+          {(props) => <HomeScreens {...props} onLogout={handleLogout} />}
+        </Stack.Screen>
         <Stack.Screen
           name="Forum"
           component={ForumScreens}
@@ -148,6 +157,16 @@ export default function App() {
         <Stack.Screen
           name="Contact"
           component={ContactScreens}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="About"
+          component={AboutScreens}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="Terms"
+          component={TermsScreens}
           options={{ headerShown: false }}
         />
         <Stack.Screen
@@ -195,6 +214,41 @@ export default function App() {
         <Stack.Screen
           name="AccountPengajar"
           component={AccountPengajar}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="InfoLes"
+          component={InfoLes}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="Dashboard"
+          component={Dashboard}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="DataPelajar"
+          component={DataPelajar}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="DataPengajar"
+          component={DataPengajar}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="DataForum"
+          component={DataForum}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="DataContact"
+          component={DataContact}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="BannerScreen"
+          component={BannerScreen}
           options={{ headerShown: false }}
         />
       </Stack.Navigator>

@@ -4,155 +4,254 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  ScrollView,
   StyleSheet,
+  ScrollView,
+  Modal,
+  FlatList,
+  TouchableHighlight,
+  Dimensions,
 } from "react-native";
-import Icon from "react-native-vector-icons/FontAwesome";
 import { FontAwesome } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
-import axios from "axios"; // Import axios untuk memanggil API
-import { Platform } from "react-native";
+import axios from "axios"; // Make sure to import axios
+const { width, height } = Dimensions.get("window");
 
-// Sesuaikan BASE_URL dengan kondisi emulator/perangkat
-const BASE_URL =
-  Platform.OS === "android" ? "http://10.0.2.2:5001" : "http://localhost:5001";
-
-const ForumScreens = () => {
-  const [forumData, setForumData] = useState([]); // State untuk data forum
-  const [searchQuery, setSearchQuery] = useState(""); // State untuk query pencarian
-  const [loading, setLoading] = useState(true); // State untuk memonitor loading data
+export default function FilterScreens() {
   const navigation = useNavigation();
 
-  // Fungsi untuk mengambil data forum dari API
-  const fetchForumData = async () => {
-    try {
-      const response = await axios.get(`${BASE_URL}/api/forum`);
-      console.log("Data diterima:", response.data); // Cek data yang diterima
+  const [provinceData, setProvinceData] = useState([]);
+  const [cityData, setCityData] = useState([]);
+  const [districtData, setDistrictData] = useState([]);
+  const [selectedLocation, setSelectedLocation] = useState("Pekanbaru");
+  const [modalVisible, setModalVisible] = useState(false);
+  const [locationType, setLocationType] = useState("province");
+  const [selectedProvinceCode, setSelectedProvinceCode] = useState(null);
+  const [selectedCityCode, setSelectedCityCode] = useState(null);
 
-      if (response.data && response.data.forum) {
-        // Memastikan data forum ada
-        const formattedData = Object.keys(response.data.forum).map((key) => ({
-          forum_id: key,
-          ...response.data.forum[key],
-        }));
-        setForumData(formattedData); // Menyimpan data yang sudah diformat
+  // Fetch Provinces from API
+  useEffect(() => {
+    const fetchProvinces = async () => {
+      try {
+        const response = await axios.get(
+          "https://open-api.my.id/api/wilayah/provinces"
+        );
+        if (Array.isArray(response.data)) {
+          setProvinceData(response.data);
+        } else {
+          console.error("Invalid data format:", response.data);
+        }
+      } catch (error) {
+        console.error("Error fetching provinces:", error);
+        alert("Error fetching provinces. Please check your connection.");
+      }
+    };
+    fetchProvinces();
+  }, []);
+
+  // Fetch Cities based on selected Province
+  const fetchCities = async (provinceCode) => {
+    try {
+      const response = await axios.get(
+        `https://open-api.my.id/api/wilayah/regencies/${provinceCode}`
+      );
+      if (Array.isArray(response.data)) {
+        setCityData(response.data);
       } else {
-        console.log("Tidak ada data forum");
+        console.error("Invalid city data format:", response.data);
       }
     } catch (error) {
-      console.error("Error fetching forum data:", error);
-    } finally {
-      setLoading(false); // Mengubah state loading menjadi false setelah data selesai di-fetch
+      console.error("Error fetching cities:", error);
+      alert("Error fetching cities. Please check your connection.");
     }
   };
 
-  useEffect(() => {
-    fetchForumData(); // Ambil data forum saat pertama kali komponen dimuat
-  }, []);
+  // Fetch Districts based on selected City
+  const fetchDistricts = async (cityCode) => {
+    try {
+      const response = await axios.get(
+        `https://open-api.my.id/api/wilayah/districts/${cityCode}`
+      );
+      if (Array.isArray(response.data)) {
+        setDistrictData(response.data);
+      } else {
+        console.error("Invalid district data format:", response.data);
+      }
+    } catch (error) {
+      console.error("Error fetching districts:", error);
+      alert("Error fetching districts. Please check your connection.");
+    }
+  };
 
-  const handleHome = () => navigation.navigate("Home");
-  const handleSave = () => navigation.navigate("Savelist");
-  const handleJawaban = () => navigation.navigate("ForumAnswer");
-  const handleQuestion = () => navigation.navigate("ForumQuestion");
-
-  // Filter data forum berdasarkan pencarian
-  const filteredData = forumData.filter(
-    (data) =>
-      data.pertanyaan &&
-      data.pertanyaan.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
-  console.log("Filtered Data:", filteredData); // Cek filtered data
-
-  // Cek jika loading true maka tampilkan indikator loading
-  if (loading) {
-    return (
-      <View style={styles.loadingContainer}>
-        <Text>Loading...</Text>
-      </View>
-    );
-  }
-
-  // Cek jika filteredData kosong
-  if (filteredData.length === 0) {
-    return (
-      <View style={styles.container}>
-        <Text style={styles.noDataText}>Tidak ada data yang ditemukan.</Text>
-      </View>
-    );
-  }
+  // Handle location selection from modal
+  const handleLocationSelect = (name, provinceCode, cityCode) => {
+    setSelectedLocation(name);
+    setModalVisible(false);
+  };
 
   return (
     <View style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Icon name="arrow-left" size={20} color="white" />
+          <FontAwesome name="arrow-left" size={20} color="white" />
         </TouchableOpacity>
-        <Text style={styles.headerText}>Forum</Text>
+        <Text style={styles.headerText}>Filter</Text>
       </View>
-
-      <View style={styles.searchContainer}>
-        <TextInput
-          style={styles.input}
-          placeholder="Cari jawabanmu..."
-          value={searchQuery}
-          onChangeText={(text) => setSearchQuery(text)}
-        />
-        <TouchableOpacity style={styles.askButton} onPress={handleQuestion}>
-          <Text style={styles.askButtonText}>Bertanya</Text>
-        </TouchableOpacity>
-      </View>
-
       <ScrollView contentContainerStyle={styles.contentContainer}>
-        {filteredData.map((data) => (
-          <View key={data.forum_id} style={styles.card}>
-            <View style={styles.cardHeader}>
-              <View style={styles.profileContainer}>
-                <View style={styles.profileAvatar} />
-                <Text style={styles.profileName}>{data.username}</Text>
-              </View>
+        {/* Lokasi */}
+        <View style={styles.section}>
+          <Text style={styles.label}>Lokasi</Text>
+          <TouchableOpacity onPress={() => setModalVisible(true)}>
+            <View style={styles.inputWrapper}>
+              <TextInput
+                style={[styles.input, styles.readOnly]}
+                value={selectedLocation}
+                editable={false}
+              />
+              <FontAwesome
+                name="chevron-down"
+                size={18}
+                color="gray"
+                style={styles.icon}
+              />
             </View>
-            <Text style={styles.questionText}>{data.pertanyaan}</Text>
-            <View style={styles.tagContainer}>
-              <TouchableOpacity
-                onPress={handleJawaban}
-                style={styles.commentButton}
-              >
-                <Text style={styles.commentButtonText}>Beri jawaban</Text>
-              </TouchableOpacity>
-              {data.tag && data.tag.length > 0 ? (
-                data.tag.map((tag, idx) => (
-                  <Text key={idx} style={styles.tagText}>
-                    {tag}
-                  </Text>
-                ))
-              ) : (
-                <Text style={styles.tagText}>No tags available</Text>
-              )}
-            </View>
+          </TouchableOpacity>
+        </View>
+
+        {/* Kelas */}
+        <View style={styles.section}>
+          <Text style={styles.label}>Kelas</Text>
+          <View style={styles.buttonGroup}>
+            <TouchableOpacity style={[styles.button, styles.optionButton]}>
+              <Text>Private</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={[styles.button, styles.optionButton]}>
+              <Text>Public</Text>
+            </TouchableOpacity>
           </View>
-        ))}
+        </View>
+
+        {/* Fasilitas */}
+        <View style={styles.section}>
+          <Text style={styles.label}>Fasilitas</Text>
+          <View style={styles.facilityGroup}>
+            {["AC", "Kantin", "Musholla", "Wifi"].map((item) => (
+              <TouchableOpacity
+                key={item}
+                style={[styles.button, styles.optionButton]}
+              >
+                <Text>{item}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+
+        {/* Harga */}
+        <View style={styles.section}>
+          <Text style={styles.label}>Harga</Text>
+          <View style={styles.priceInputGroup}>
+            <TextInput
+              style={[styles.input, styles.flexGrow]}
+              placeholder="Rp."
+              keyboardType="numeric"
+            />
+            <Text>-</Text>
+            <TextInput
+              style={[styles.input, styles.flexGrow]}
+              placeholder="Rp."
+              keyboardType="numeric"
+            />
+          </View>
+        </View>
+
+        <TouchableOpacity style={styles.filterButton}>
+          <Text style={styles.filterButtonText}>Filter</Text>
+        </TouchableOpacity>
       </ScrollView>
 
-      <View style={styles.footer}>
-        <TouchableOpacity onPress={handleHome}>
-          <FontAwesome name="home" size={24} />
-        </TouchableOpacity>
-        <TouchableOpacity>
-          <FontAwesome name="comments" size={24} style={{ color: "white" }} />
-        </TouchableOpacity>
-        <TouchableOpacity onPress={handleSave}>
-          <FontAwesome name="bookmark" size={24} />
-        </TouchableOpacity>
-      </View>
+      {/* Modal for Location Selection */}
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={modalVisible}
+        onRequestClose={() => setModalVisible(false)}
+      >
+        <View style={styles.modalBackground}>
+          <View style={styles.modalContainer}>
+            <Text style={styles.modalTitle}>Pilih Lokasi</Text>
+            {locationType === "province" && (
+              <FlatList
+                data={provinceData}
+                keyExtractor={(item) => item.id.toString()}
+                renderItem={({ item }) => (
+                  <TouchableOpacity
+                    style={styles.modalOption}
+                    onPress={() => {
+                      setSelectedProvinceCode(item.id);
+                      setLocationType("city"); // Switch to cities
+                      fetchCities(item.id); // Fetch cities for the selected province
+                    }}
+                  >
+                    <Text style={styles.modalOptionText}>{item.name}</Text>
+                  </TouchableOpacity>
+                )}
+              />
+            )}
+            {locationType === "city" && (
+              <FlatList
+                data={cityData}
+                keyExtractor={(item) => item.id.toString()}
+                renderItem={({ item }) => (
+                  <TouchableOpacity
+                    style={styles.modalOption}
+                    onPress={() => {
+                      setSelectedCityCode(item.id);
+                      setLocationType("district"); // Switch to districts
+                      fetchDistricts(item.id); // Fetch districts for the selected city
+                    }}
+                  >
+                    <Text style={styles.modalOptionText}>{item.name}</Text>
+                  </TouchableOpacity>
+                )}
+              />
+            )}
+            {locationType === "district" && (
+              <FlatList
+                data={districtData}
+                keyExtractor={(item) => item.id.toString()}
+                renderItem={({ item }) => (
+                  <TouchableOpacity
+                    style={styles.modalOption}
+                    onPress={() => {
+                      handleLocationSelect(
+                        item.name,
+                        selectedProvinceCode,
+                        selectedCityCode
+                      );
+                      setLocationType("province"); // Reset to provinces
+                    }}
+                  >
+                    <Text style={styles.modalOptionText}>{item.name}</Text>
+                  </TouchableOpacity>
+                )}
+              />
+            )}
+            <TouchableHighlight
+              style={styles.closeModalButton}
+              onPress={() => setModalVisible(false)}
+            >
+              <Text style={styles.closeModalButtonText}>Tutup</Text>
+            </TouchableHighlight>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
-};
+}
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#fff",
+    backgroundColor: "white",
   },
   header: {
     flexDirection: "row",
@@ -170,117 +269,107 @@ const styles = StyleSheet.create({
     marginLeft: "auto",
     marginRight: "auto",
   },
-  searchContainer: {
-    flexDirection: "row",
+  contentContainer: {
     padding: 16,
+  },
+  section: {
+    marginBottom: 16,
+  },
+  label: {
+    fontSize: 16,
+    fontWeight: "600",
+    marginBottom: 8,
+  },
+  inputWrapper: {
+    position: "relative",
   },
   input: {
-    flex: 1,
-    padding: 8,
     borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 16,
-    marginRight: 8,
-  },
-  askButton: {
-    backgroundColor: "#095783",
-    padding: 8,
-    borderRadius: 30,
-    borderWidth: 1,
-    borderColor: "#ccc",
-  },
-  askButtonText: {
-    fontSize: 14,
-    fontWeight: "semibold",
-    color: "#fff",
-  },
-  contentContainer: {
-    paddingBottom: 16,
-  },
-  card: {
-    backgroundColor: "white",
-    padding: 16,
+    borderColor: "#d1d5db",
     borderRadius: 8,
-    margin: 16,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
+    padding: 8,
+    backgroundColor: "#e5e7eb",
   },
-  cardHeader: {
+  readOnly: {
+    color: "black",
+  },
+  icon: {
+    position: "absolute",
+    right: 8,
+    top: 12,
+  },
+  buttonGroup: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 8,
   },
-  profileContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  profileAvatar: {
-    width: 32,
-    height: 32,
-    backgroundColor: "#ccc",
-    borderRadius: 16,
-    marginRight: 8,
-  },
-  profileName: {
-    fontWeight: "bold",
-  },
-  questionText: {
-    fontSize: 14,
-    marginBottom: 8,
-    borderBottomWidth: 1,
-    padding: 10,
-  },
-  commentButton: {
-    backgroundColor: "#095783",
-    padding: 8,
-    borderRadius: 30,
-    marginBottom: 8,
-  },
-  commentButtonText: {
-    color: "#fff",
-    fontWeight: "semibold",
-    textAlign: "center",
-  },
-  tagContainer: {
+  facilityGroup: {
     flexDirection: "row",
     flexWrap: "wrap",
     gap: 8,
   },
-  tagText: {
-    fontSize: 12,
-    color: "#000",
-    backgroundColor: "#fff",
-    padding: 8,
-    borderRadius: 8,
-    marginBottom: 8,
+  button: {
     borderWidth: 1,
-    borderColor: "#000",
-    fontWeight: "semibold",
+    borderColor: "#d1d5db",
+    borderRadius: 8,
+    padding: 8,
+    margin: 4,
+    backgroundColor: "#e5e7eb",
   },
-  footer: {
+  optionButton: {
+    flexGrow: 1,
+    alignItems: "center",
+  },
+  priceInputGroup: {
     flexDirection: "row",
-    justifyContent: "space-evenly",
-    height: 60,
-    backgroundColor: "#88D0E4",
-    width: "100%",
-    position: "absolute",
-    paddingVertical: 16,
-    bottom: 0,
+    alignItems: "center",
+    gap: 8,
   },
-  loadingContainer: {
+  flexGrow: {
+    flexGrow: 1,
+  },
+  filterButton: {
+    backgroundColor: "#1e40af",
+    padding: 12,
+    borderRadius: 8,
+    alignItems: "center",
+  },
+  filterButtonText: {
+    color: "white",
+    fontWeight: "600",
+  },
+  modalBackground: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
   },
-  noDataText: {
-    textAlign: "center",
-    padding: 16,
+  modalContainer: {
+    backgroundColor: "white",
+    padding: 20,
+    borderRadius: 10,
+    width: width - 0,
+    height: height - 10,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    marginBottom: 16,
+  },
+  modalOption: {
+    paddingVertical: 12,
+  },
+  modalOptionText: {
     fontSize: 16,
   },
+  closeModalButton: {
+    marginTop: 16,
+    paddingVertical: 12,
+    backgroundColor: "#1D4ED8",
+    borderRadius: 5,
+  },
+  closeModalButtonText: {
+    color: "white",
+    textAlign: "center",
+    fontWeight: "bold",
+  },
 });
-
-export default ForumScreens;
